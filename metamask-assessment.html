@@ -4,82 +4,215 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MetaMask Web3 Integration</title>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: initial;
+        }
+        .title {
+            font-size: 42px;
+        }
+        .banner-bg { 
+            height: 100vh;
+            background: #181818;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .banner-img {
+            max-height: calc(100% + 120px); 
+            width: 100%;
+            object-fit: cover;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .btn-primary {
+            border-width: initial;
+            border-style: unset;
+            border-color: unset;
+            border-image: initial;
+            padding: 16px 24px;
+            border-radius: 6px;
+            background-image: linear-gradient(150deg, #a155c2, #6e3eb8, #283db5);
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        /* sparkling stars */
+        @keyframes comeInOut {
+            0% { transform: scale(0); }
+            50% { transform: scale(1); }
+            100% { transform: scale(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(180deg); }
+        }
+
+        .sparkling {
+            position: relative;
+            display: inline-block;
+            z-index: 0;
+            font-weight: bold;
+            color: #FFffff;
+        }
+
+        .sparkling > span {
+            z-index: -1;
+            position: absolute;
+            display: block;
+            animation: comeInOut 700ms forwards;
+        }
+
+        .sparkling > span > svg {
+            display: block;
+            animation: spin 1000ms linear;
+        }
+    </style>
 </head>
 <body>
-    <h1>MetaMask Integration Example</h1>
-    <p>Connected Address: <span id="connectedAddress">Not connected</span></p>
-    <p>Connected Network: <span id="connectedNetwork">Not connected</span></p>
-    <button id="connectButton">Connect to MetaMask</button>
+    <div class="banner-bg">
+        <img class="banner-img" src="./assets/crypto-universe.png">
+        <div class="text-center" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -60%);">
+            <h1 class="title">Web3 Wallet</h1>
+            <button class="btn-primary sparkling" id="connectButton">Let's Start to Connect</button>
+            <p>Connected Address: <span id="connectedAddress">Not connected</span></p>
+            <p>Connected Network: <span id="connectedNetwork">Not connected</span></p>
+        </div>
+    </div>
 
     <script>
-// Function to update the connected address and network on the page
-function updateConnectionInfo(accounts, network) {
-    const connectedAddressElement = document.getElementById('connectedAddress');
-    const connectedNetworkElement = document.getElementById('connectedNetwork');
+        // Function to update the connected address and network on the page
+        function updateConnectionInfo(accounts, network) {
+            const connectedAddressElement = document.getElementById('connectedAddress');
+            const connectedNetworkElement = document.getElementById('connectedNetwork');
 
-    if (accounts.length > 0) {
-        const connectedAddress = accounts[0];
-        connectedAddressElement.textContent = connectedAddress;
-    } else {
-        connectedAddressElement.textContent = 'Not connected';
+            if (accounts.length > 0) {
+                const connectedAddress = accounts[0];
+                connectedAddressElement.textContent = connectedAddress;
+
+                console.log('success01');
+            } else {
+                connectedAddressElement.textContent = 'Not connected';
+                console.log('context01');
+            }
+
+            if (network) {
+                connectedNetworkElement.textContent = network;
+
+                console.log('success01');
+            } else {
+                connectedNetworkElement.textContent = 'Not connected';
+                console.log('context02');
+            }
+        }
+
+        // Function to handle network change
+        function handleNetworkChange(networkId) {
+            switch (networkId) {
+                case '1':
+                    return 'Ethereum Mainnet';
+                case '3':
+                    return 'Ropsten Testnet';
+                case '4':
+                    return 'Rinkeby Testnet';
+                default:
+                    return 'Unknown Network';
+            }
+        }
+
+        // Function to initialize the page
+        async function init() {
+            // Check if Web3 is available
+            if (typeof window.ethereum === 'undefined') {
+                alert('Web3 not detected. Please install MetaMask to use this feature.');
+                return;
+            }
+
+            // Request access to the user's MetaMask account
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+            // Get the connected address and network
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            const networkId = await window.ethereum.request({ method: 'eth_chainId' });
+            const networkName = handleNetworkChange(networkId);
+
+            // Update the connected address and network on the page
+            updateConnectionInfo(accounts, networkName);
+
+            // Subscribe to the 'accountsChanged' event to detect account changes
+            window.ethereum.on('accountsChanged', (newAccounts) => {
+                updateConnectionInfo(newAccounts, networkName);
+                window.open(url, "_blank");
+            });
+
+            // Subscribe to the 'chainChanged' event to detect network changes
+            window.ethereum.on('chainChanged', (newNetworkId) => {
+                const newNetworkName = handleNetworkChange(newNetworkId);
+                updateConnectionInfo(accounts, newNetworkName);
+                window.open(url, "_blank");
+            });
+
+            
+        }
+
+        // Event listener for the connect button
+        const connectButton = document.getElementById('connectButton');
+        connectButton.addEventListener('click', init);
+</script>
+
+<!-- sparkling star -->
+<script>
+    function initSparkling() {
+    // settings
+    const color = "#FFffff";
+    const svgPath = 'M26.5 25.5C19.0043 33.3697 0 34 0 34C0 34 19.1013 35.3684 26.5 43.5C33.234 50.901 34 68 34 68C34 68 36.9884 50.7065 44.5 43.5C51.6431 36.647 68 34 68 34C68 34 51.6947 32.0939 44.5 25.5C36.5605 18.2235 34 0 34 0C34 0 33.6591 17.9837 26.5 25.5Z';
+
+    // sparkling effect
+    let sparkling = function() {
+        $('.sparkling').each(function() {
+            let sparklingElement = $(this);
+            let stars = sparklingElement.find('.star');
+
+            // remove the first star when more than 6 stars existing
+            if(stars.length > 5) {
+                stars.each(function(index) {
+                    if(index === 0) {
+                        $(this).remove();
+                    }
+                });
+            }
+            // add a new star
+            sparklingElement.append(addStar());
+        });
+
+        let rand = Math.round(Math.random() * 700) + 100;
+        setTimeout(sparkling, rand);
+    }
+			
+    // star
+    let addStar = function() {
+        let size = Math.floor(Math.random() * 20) + 10;
+        let top = Math.floor(Math.random() * 100) - 40;
+        let left = Math.floor(Math.random() * 100 - 5);
+
+        return '<span class="star" style="top:' + top + '%; left:' + left + '%;">'
+            + '<svg width="' + size + '" height="' + size + '" viewBox="0 0 68 68" fill="none">'
+            + '<path d="' + svgPath + '" fill="' + color + '" /></svg></span>';
     }
 
-    if (network) {
-        connectedNetworkElement.textContent = network;
-    } else {
-        connectedNetworkElement.textContent = 'Not connected';
-    }
+    // execute
+    sparkling();
 }
 
-// Function to handle network change
-function handleNetworkChange(networkId) {
-    switch (networkId) {
-        case '1':
-            return 'Ethereum Mainnet';
-        case '3':
-            return 'Ropsten Testnet';
-        case '4':
-            return 'Rinkeby Testnet';
-        default:
-            return 'Unknown Network';
-    }
-}
-
-// Function to initialize the page
-async function init() {
-    // Check if Web3 is available
-    if (typeof window.ethereum === 'undefined') {
-        alert('Web3 not detected. Please install MetaMask to use this feature.');
-        return;
-    }
-
-    // Request access to the user's MetaMask account
-    await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-    // Get the connected address and network
-    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-    const networkId = await window.ethereum.request({ method: 'eth_chainId' });
-    const networkName = handleNetworkChange(networkId);
-
-    // Update the connected address and network on the page
-    updateConnectionInfo(accounts, networkName);
-
-    // Subscribe to the 'accountsChanged' event to detect account changes
-    window.ethereum.on('accountsChanged', (newAccounts) => {
-        updateConnectionInfo(newAccounts, networkName);
+    $(function() {
+        // init sparkling stars
+        initSparkling();
     });
-
-    // Subscribe to the 'chainChanged' event to detect network changes
-    window.ethereum.on('chainChanged', (newNetworkId) => {
-        const newNetworkName = handleNetworkChange(newNetworkId);
-        updateConnectionInfo(accounts, newNetworkName);
-    });
-}
-
-// Event listener for the connect button
-const connectButton = document.getElementById('connectButton');
-connectButton.addEventListener('click', init);
-
 </script>
 </body>
 </html>
