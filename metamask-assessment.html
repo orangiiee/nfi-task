@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaMask Web3 Integration</title>
+</head>
+<body>
+    <h1>MetaMask Integration Example</h1>
+    <p>Connected Address: <span id="connectedAddress">Not connected</span></p>
+    <p>Connected Network: <span id="connectedNetwork">Not connected</span></p>
+    <button id="connectButton">Connect to MetaMask</button>
+
+    <script>
+// Function to update the connected address and network on the page
+function updateConnectionInfo(accounts, network) {
+    const connectedAddressElement = document.getElementById('connectedAddress');
+    const connectedNetworkElement = document.getElementById('connectedNetwork');
+
+    if (accounts.length > 0) {
+        const connectedAddress = accounts[0];
+        connectedAddressElement.textContent = connectedAddress;
+    } else {
+        connectedAddressElement.textContent = 'Not connected';
+    }
+
+    if (network) {
+        connectedNetworkElement.textContent = network;
+    } else {
+        connectedNetworkElement.textContent = 'Not connected';
+    }
+}
+
+// Function to handle network change
+function handleNetworkChange(networkId) {
+    switch (networkId) {
+        case '1':
+            return 'Ethereum Mainnet';
+        case '3':
+            return 'Ropsten Testnet';
+        case '4':
+            return 'Rinkeby Testnet';
+        default:
+            return 'Unknown Network';
+    }
+}
+
+// Function to initialize the page
+async function init() {
+    // Check if Web3 is available
+    if (typeof window.ethereum === 'undefined') {
+        alert('Web3 not detected. Please install MetaMask to use this feature.');
+        return;
+    }
+
+    // Request access to the user's MetaMask account
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+    // Get the connected address and network
+    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+    const networkId = await window.ethereum.request({ method: 'eth_chainId' });
+    const networkName = handleNetworkChange(networkId);
+
+    // Update the connected address and network on the page
+    updateConnectionInfo(accounts, networkName);
+
+    // Subscribe to the 'accountsChanged' event to detect account changes
+    window.ethereum.on('accountsChanged', (newAccounts) => {
+        updateConnectionInfo(newAccounts, networkName);
+    });
+
+    // Subscribe to the 'chainChanged' event to detect network changes
+    window.ethereum.on('chainChanged', (newNetworkId) => {
+        const newNetworkName = handleNetworkChange(newNetworkId);
+        updateConnectionInfo(accounts, newNetworkName);
+    });
+}
+
+// Event listener for the connect button
+const connectButton = document.getElementById('connectButton');
+connectButton.addEventListener('click', init);
+
+</script>
+</body>
+</html>
